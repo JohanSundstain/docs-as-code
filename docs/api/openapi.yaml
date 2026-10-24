@@ -1,0 +1,156 @@
+
+openapi: 3.0.3
+
+info:
+  title: Resume Analyzer API
+  description: API для анализа резюме, извлечения информации о кандидатах и сравнения резюме с требованиями вакансий.
+  version: 1.0.0
+
+servers:
+  - url: https://example.com/api/v1
+
+paths:
+  /resumes:
+    post:
+      summary: Загрузка и анализ резюме
+      description: Загружает резюме и извлекает навыки, образование и опыт работы.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: Резюме успешно проанализировано
+        '400':
+          description: Некорректный файл или неподдерживаемый формат
+
+  /resumes/{id}:
+    get:
+      summary: Получение результатов анализа
+      description: Возвращает результаты анализа резюме по его идентификатору.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор резюме
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Результаты анализа успешно получены
+        '404':
+          description: Резюме не найдено
+
+  /resumes/{id}/compare:
+    post:
+      summary: Сравнение резюме с вакансией
+      description: Сравнивает навыки и опыт кандидата с требованиями вакансии.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор резюме
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeAnalysis'
+      responses:
+        '200':
+          description: Резюме успешно проанализировано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 123
+                  skills:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - Python
+                      - SQL
+                  education:
+                    type: string
+                    example: Высшее образование
+                  experience:
+                    type: string
+                    example: 2 года опыта работы
+
+        '400':
+          description: Неподдерживаемый формат файла
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: UNSUPPORTED_FILE_FORMAT
+                  message:
+                    type: string
+                    example: File format must be PDF or DOCX
+
+        '413':
+          description: Размер файла превышает допустимый
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: FILE_TOO_LARGE
+                  message:
+                    type: string
+                    example: File size exceeds the maximum allowed limit
+
+        '503':
+          description: ML-модель временно недоступна
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: MODEL_UNAVAILABLE
+                  message:
+                    type: string
+                    example: Resume analysis is temporarily unavailable
+
+components:
+  schemas:
+    ResumeAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        skills:
+          type: array
+          items:
+            type: string
+          example:
+            - Python
+            - SQL
+        education:
+          type: string
+          example: Высшее образование
+        experience:
+          type: string
+          example: 2 года опыта работы
